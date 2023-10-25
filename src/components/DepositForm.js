@@ -24,37 +24,37 @@ export default function DepositForm() {
 
   const buildTransaction = async (e) => {
     e.preventDefault();
-    const testnet = new TestnetHelper();
-    // const testnet = new DevEnvHelper();
+    //const testnet = new TestnetHelper();
+    const testnet = new DevEnvHelper();
 
     // setting BTC address for devnet
-    // const bitcoinAccountA = await testnet.getBitcoinAccount(WALLET_00);
-    // const btcAddress = bitcoinAccountA.wpkh.address;
-    // const btcPublicKey = bitcoinAccountA.publicKey.buffer.toString();
+     const bitcoinAccountA = await testnet.getBitcoinAccount(WALLET_00);
+     const btcAddress = bitcoinAccountA.wpkh.address;
+     const btcPublicKey = bitcoinAccountA.publicKey.buffer.toString();
 
     // setting BTC address for testnet
-    const bitcoinAccountA = await testnet.getBitcoinAccount(WALLET_00);
-    const btcAddress = userData.profile.btcAddress.p2wpkh.testnet;
-    const btcPublicKey = userData.profile.btcPublicKey.p2wpkh;
+    //const btcAddress = userData.profile.btcAddress.p2wpkh.testnet;
+    //const btcPublicKey = userData.profile.btcPublicKey.p2wpkh;
 
     let utxos = await testnet.fetchUtxos(btcAddress);
 
     // If we are working via testnet
     // get sBTC deposit address from bridge API
+    /*
     const response = await fetch(
       "http://localhost:3010/bridge-api/testnet/v1/sbtc/init-ui"
     );
     const data = await response.json();
     console.log(data);
     const sbtcWalletAddress = data.sbtcContractData.sbtcWalletAddress;
-    console.log(sbtcWalletAddress);
+    */
 
     // if we are working via devnet
-    // const sbtcWalletAccount = await testnet.getBitcoinAccount(WALLET_00);
-    // const sbtcWalletAddress = sbtcWalletAccount.tr.address;
+     const sbtcWalletAccount = await testnet.getBitcoinAccount(WALLET_00);
+     const sbtcWalletAddress = sbtcWalletAccount.tr.address;
     const tx = await sbtcDepositHelper({
       // comment this line out if working via devnet
-      network: TESTNET,
+      //network: TESTNET,
       sbtcWalletAddress,
       stacksAddress: userData.profile.stxAddress.testnet,
       amountSats: satoshis,
@@ -62,6 +62,9 @@ export default function DepositForm() {
       utxos,
       bitcoinChangeAddress: btcAddress,
     });
+    console.log("sbtcwalletaddres and stacks address")
+    console.log(sbtcWalletAddress);
+    console.log(userData.profile.stxAddress.testnet);
 
     const psbt = tx.toPSBT();
     const requestParams = {
@@ -81,7 +84,7 @@ export default function DepositForm() {
     <form className="flex items-center justify-center space-x-4">
       <input
         type="number"
-        placeholder="Amount of BTC to deposit"
+        placeholder="Amount of satoshis to deposit"
         className="w-1/3 px-4 py-2 text-gray-300 bg-gray-700 rounded focus:outline-none focus:border-orange-500"
         value={satoshis}
         onChange={handleInputChange}

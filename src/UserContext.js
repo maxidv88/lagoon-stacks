@@ -10,7 +10,7 @@ const UserProvider = ({ children }) => {
   const test=3
 
     userSession = useMemo(() => {
-    const appConfig = new AppConfig(['store_write', 'publish_data']);
+    const appConfig = new AppConfig();
     return new UserSession({ appConfig });
   }, []);
 
