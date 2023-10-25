@@ -6,6 +6,7 @@ import {
   sbtcWithdrawHelper,
   sbtcWithdrawMessage,
   TESTNET,
+  WALLET_00,
   TestnetHelper,
 } from "sbtc";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
@@ -13,12 +14,15 @@ import * as btc from "@scure/btc-signer";
 import { openSignatureRequestPopup } from "@stacks/connect";
 
 import { UserContext } from "../UserContext";
-import { StacksTestnet } from "@stacks/network";
+import { StacksTestnet, StacksDevnet } from "@stacks/network";
 
 export default function WithdrawForm() {
   const { userData, userSession } = useContext(UserContext);
   const [satoshis, setSatoshis] = useState("");
   const [signature, setSignature] = useState("");
+  console.log(userData)
+  
+  const testnet = new DevEnvHelper();
 
   const handleInputChange = (event) => {
     setSatoshis(event.target.value);
@@ -26,17 +30,19 @@ export default function WithdrawForm() {
 
   const signMessage = async (e) => {
     e.preventDefault();
+    const bitcoinAccountA = await testnet.getBitcoinAccount(WALLET_00);
+    const btcAddress = bitcoinAccountA.wpkh.address;
     const message =
       sbtcWithdrawMessage({
-        network: TESTNET,
+        //network: TESTNET,
         amountSats: satoshis,
-        bitcoinAddress: userData.profile.btcAddress.p2wpkh.testnet,
+        bitcoinAddress: btcAddress,
       });
 
     openSignatureRequestPopup({
       message,
       userSession,
-      network: new StacksTestnet(),
+      network: new StacksDevnet(),
       onFinish: (data) => {
         setSignature(data.signature);
       },
@@ -45,11 +51,15 @@ export default function WithdrawForm() {
 
   const buildTransaction = async (e) => {
     e.preventDefault();
-    const testnet = new TestnetHelper();
-    // const testnet = new DevEnvHelper();
+    // const testnet = new TestnetHelper();
+    //const testnet = new DevEnvHelper();
+    const bitcoinAccountA = await testnet.getBitcoinAccount(WALLET_00);
+    const btcAddress = bitcoinAccountA.wpkh.address;
+    const btcPublicKey = bitcoinAccountA.publicKey.buffer.toString();
+    const sbtcWalletAddress = bitcoinAccountA.tr.address;
 
     let utxos = await testnet.fetchUtxos(
-      userData.profile.btcAddress.p2wpkh.testnet
+      btcAddress
     );
 
     // get sBTC deposit address from bridge API
@@ -59,19 +69,19 @@ export default function WithdrawForm() {
     const data = await response.json();
 
     const tx = await sbtcWithdrawHelper({
-      network: TESTNET,
-      sbtcWalletAddress: data.sbtcContractData.sbtcWalletAddress,
-      bitcoinAddress: userData.profile.btcAddress.p2wpkh.testnet,
+      //network: TESTNET,
+      sbtcWalletAddress: sbtcWalletAddress,
+      bitcoinAddress: btcAddress,
       amountSats: satoshis,
       signature,
       feeRate: await testnet.estimateFeeRate("low"),
       fulfillmentFeeSats: 2000,
       utxos,
-      bitcoinChangeAddress: userData.profile.btcAddress.p2wpkh.testnet,
+      bitcoinChangeAddress: btcAddress,
     });
     const psbt = tx.toPSBT();
     const requestParams = {
-      publicKey: userData.profile.btcPublicKey.p2wpkh.testnet,
+      publicKey: btcPublicKey,
       hex: bytesToHex(psbt),
     };
     const txResponse = await window.btc.request("signPsbt", requestParams);

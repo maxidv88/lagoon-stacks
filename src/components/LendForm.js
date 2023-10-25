@@ -22,8 +22,8 @@ export default function LendForm() {
       contractName,
       functionName,
       functionArgs,
-      network: new StacksTestnet(),
-      // network: new StacksMocknet(),
+      //network: new StacksTestnet(),
+      network: new StacksMocknet(),
       postConditionMode: PostConditionMode.Allow,
       appDetails: {
         name: "Lagoon",
