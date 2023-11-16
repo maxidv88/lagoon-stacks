@@ -30,6 +30,11 @@ export default function Navbar() {
             Withdraw sBTC
           </Link>
         </li>
+         <li>
+          <Link href="/hermetica" className="hover:text-orange-500">
+            Hermetica
+          </Link>
+        </li>
       </ul>
 
         <ConnectWallet
